@@ -37,6 +37,9 @@ jobs:
           pushd './${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}'
           dotnet build --configuration Release --output ./output
           popd
+          
+      - name: dotnet publish
+        run: dotnet publish KeyVault.Acmebot/KeyVault.Acmebot.csproj --configuration Release --output ./publish-output
       
       - name: Login to Azure
         uses: azure/login@v2
@@ -51,5 +54,4 @@ jobs:
         with:
           app-name: 'func-acmebot-7rg7'
           slot-name: 'Production'
-          package: '${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}/output'
-          
+          package: '${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}/output'         
