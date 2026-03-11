@@ -18,7 +18,21 @@ public class IonosProvider(IonosOptions options) : IDnsProvider
     {
         var zones = await _client.ListZonesAsync();
 
-        return zones.Select(x => new DnsZone(this) { Id = x.Id, Name = x.Name }).ToArray();
+        var dnsZones = new List<DnsZone>();
+
+        foreach (var zone in zones)
+        {
+            var zoneDetails = await _client.GetZoneAsync(zone.Id);
+
+            dnsZones.Add(new DnsZone(this)
+            {
+                Id = zoneDetails.Id,
+                Name = zoneDetails.Name,
+                NameServers = zoneDetails.NameServers
+            });
+        }
+
+        return dnsZones;
     }
 
     public async Task CreateTxtRecordAsync(DnsZone zone, string relativeRecordName, IEnumerable<string> values)
@@ -75,9 +89,13 @@ public class IonosProvider(IonosOptions options) : IDnsProvider
             return await response.Content.ReadAsAsync<Zone[]>();
         }
 
-        public async Task<ZoneDetails> GetZoneAsync(string zoneId, string recordName, string recordType)
+        public async Task<ZoneDetails> GetZoneAsync(string zoneId, string recordName = null, string recordType = null)
         {
-            var response = await _httpClient.GetAsync($"zones/{zoneId}?recordName={Uri.EscapeDataString(recordName)}&recordType={Uri.EscapeDataString(recordType)}");
+            var url = recordName != null && recordType != null
+                ? $"zones/{zoneId}?recordName={Uri.EscapeDataString(recordName)}&recordType={Uri.EscapeDataString(recordType)}"
+                : $"zones/{zoneId}";
+
+            var response = await _httpClient.GetAsync(url);
 
             response.EnsureSuccessStatusCode();
 
@@ -115,6 +133,9 @@ public class IonosProvider(IonosOptions options) : IDnsProvider
 
         [JsonPropertyName("name")]
         public string Name { get; set; }
+
+        [JsonPropertyName("nameServers")]
+        public string[] NameServers { get; set; } = [];
 
         [JsonPropertyName("records")]
         public DnsRecord[] Records { get; set; } = [];
