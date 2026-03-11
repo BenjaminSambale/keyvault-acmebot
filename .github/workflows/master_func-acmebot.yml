@@ -39,7 +39,7 @@ jobs:
           popd
           
       - name: dotnet publish
-        run: dotnet publish KeyVault.Acmebot/KeyVault.Acmebot.csproj --configuration Release --output ./publish-output
+        run: dotnet publish src/Acmebot/Acmebot.csproj --configuration Release --output ./publish-output
       
       - name: Login to Azure
         uses: azure/login@v2
